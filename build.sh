@@ -83,7 +83,7 @@ docker run --rm -i $TTY_ARG "${UIDARGS[@]}" -v $PWD/ffbuild:/ffbuild -v "$BUILD_
 
 mkdir -p artifacts
 ARTIFACTS_PATH="$PWD/artifacts"
-BUILD_NAME="ffmpeg-$(./ffbuild/ffmpeg/ffbuild/version.sh ffbuild/ffmpeg)-${TARGET}-${VARIANT}${ADDINS_STR:+-}${ADDINS_STR}"
+BUILD_NAME="ffmpeg-${ADDINS_STR:-latest}-${TARGET}"
 
 mkdir -p "ffbuild/pkgroot/$BUILD_NAME"
 package_variant ffbuild/prefix "ffbuild/pkgroot/$BUILD_NAME"
