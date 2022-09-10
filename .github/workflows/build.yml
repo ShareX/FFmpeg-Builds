@@ -184,7 +184,7 @@ jobs:
           RELDATE="$(date +'%Y-%m-%d %H:%M')"
           NAME="Auto-Build $RELDATE"
           TAGNAME="autobuild-$(date +'%Y-%m-%d-%H-%M')"
-          hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" -t "master" "$TAGNAME"
+          hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" "$TAGNAME" -t "master" "$TAGNAME"
           echo "::set-output name=tag_name::${TAGNAME}"
           echo "::set-output name=rel_date::${RELDATE}"
         env:
@@ -198,7 +198,7 @@ jobs:
           hub release delete "$TAGNAME" || true
           git push --delete origin "$TAGNAME" || true
           sleep 30
-          hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" -t "master" "$TAGNAME"
+          hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" "$TAGNAME" -t "master" "$TAGNAME"
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Update Wiki
