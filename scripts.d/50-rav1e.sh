@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/xiph/rav1e.git"
-SCRIPT_COMMIT="db7a71ae53a31a60bf31bd0635f46e15bdcc444c"
+SCRIPT_COMMIT="f9310a9aa994594f8e144d4b1d59a4034e6dff6c"
 
 ffbuild_enabled() {
     [[ $TARGET == win32 ]] && return -1
@@ -29,21 +29,26 @@ ffbuild_dockerbuild() {
         )
     fi
 
-    export CC="${FFBUILD_CROSS_PREFIX}gcc"
-    export CXX="${FFBUILD_CROSS_PREFIX}g++"
-    export LD="${FFBUILD_CROSS_PREFIX}gcc"
-    export AR="${FFBUILD_CROSS_PREFIX}ar"
-
     if [[ -n "$FFBUILD_RUST_TARGET" ]]; then
+        unset PKG_CONFIG_LIBDIR
+
+        export CC="gcc"
+        export CXX="g++"
+        export TARGET_CC="${FFBUILD_CROSS_PREFIX}gcc"
+        export TARGET_CXX="${FFBUILD_CROSS_PREFIX}g++"
+        export CROSS_COMPILE=1
+        export TARGET_CFLAGS="$CFLAGS"
+        export TARGET_CXXFLAGS="$CFLAGS"
+        unset CFLAGS
+        unset CXXFLAGS
+
         myconf+=(
             --target="$FFBUILD_RUST_TARGET"
         )
         cat <<EOF >$CARGO_HOME/config.toml
-[build]
-target = "$FFBUILD_RUST_TARGET"
 [target.$FFBUILD_RUST_TARGET]
-linker = "$LD"
-ar = "$AR"
+linker = "${FFBUILD_CROSS_PREFIX}gcc"
+ar = "${FFBUILD_CROSS_PREFIX}ar"
 EOF
     fi
 
