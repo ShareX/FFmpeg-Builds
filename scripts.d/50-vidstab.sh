@@ -1,8 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/georgmartius/vid.stab.git"
-# TODO: clamp to e7715fc until georgmartius/vid.stab#104 get fixed
-SCRIPT_COMMIT_PINNED="e7715fcf329573cdcff5c57d0e4a25f4c3a0cb7f"
+SCRIPT_COMMIT="05829db776069b7478dd2d90b6e0081668a41abc"
 
 ffbuild_enabled() {
     [[ $VARIANT == lgpl* ]] && return -1
@@ -10,8 +9,7 @@ ffbuild_enabled() {
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT_PINNED" vidstab
-    cd vidstab
+    cd "$FFBUILD_DLDIR/$SELF"
 
     mkdir build && cd build
 

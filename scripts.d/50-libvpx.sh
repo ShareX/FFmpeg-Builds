@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://chromium.googlesource.com/webm/libvpx"
-SCRIPT_COMMIT="c03c882785dc96ed91799280e68f8998bec50b90"
+SCRIPT_COMMIT="14e52008edbf2e91386423fdd53310fe49654991"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" libvpx
-    cd libvpx
+    cd "$FFBUILD_DLDIR/$SELF"
 
     local myconf=(
         --disable-shared
@@ -18,6 +17,7 @@ ffbuild_dockerbuild() {
         --disable-examples
         --disable-tools
         --disable-docs
+        --disable-unit-tests
         --enable-vp9-highbitdepth
         --prefix="$FFBUILD_PREFIX"
     )
@@ -50,6 +50,9 @@ ffbuild_dockerbuild() {
     ./configure "${myconf[@]}"
     make -j$(nproc)
     make install
+
+    # Work around strip breaking LTO symbol index
+    "$RANLIB" "$FFBUILD_PREFIX"/lib/libvpx.a
 }
 
 ffbuild_configure() {

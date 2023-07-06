@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/cisco/openh264.git"
-SCRIPT_COMMIT="0c19a5c266275693484ed84edf6ff8cb7cd89d4e"
+SCRIPT_COMMIT="986606644aca8f795fc04f76dcc758d88378e4a0"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" openh264
-    cd openh264
+    cd "$FFBUILD_DLDIR/$SELF"
 
     local myconf=(
         PREFIX="$FFBUILD_PREFIX"

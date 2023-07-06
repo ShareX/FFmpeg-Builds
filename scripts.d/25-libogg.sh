@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/xiph/ogg.git"
-SCRIPT_COMMIT="3069cc2bb44160982cdb21b2b8f0660c76b17572"
+SCRIPT_COMMIT="db5c7a49ce7ebda47b15b78471e78fb7f2483e22"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" ogg
-    cd ogg
+    cd "$FFBUILD_DLDIR/$SELF"
 
     ./autogen.sh
 

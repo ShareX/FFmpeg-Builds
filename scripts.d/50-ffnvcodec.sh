@@ -1,15 +1,27 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/FFmpeg/nv-codec-headers.git"
-SCRIPT_COMMIT="3ed7c9a0a2c0b698b83088e13008f3ec983219b2"
+SCRIPT_COMMIT="9402b5a7693e9841f8a4f4488cd2df21ac55c685"
+
+SCRIPT_REPO2="https://github.com/FFmpeg/nv-codec-headers.git"
+SCRIPT_COMMIT2="dc3e4484dc83485734e503991fe5ed3bdf256fba"
+SCRIPT_BRANCH2="sdk/11.1"
 
 ffbuild_enabled() {
     return 0
 }
 
+ffbuild_dockerdl() {
+    default_dl ffnvcodec
+    to_df "RUN git-mini-clone \"$SCRIPT_REPO2\" \"$SCRIPT_COMMIT2\" ffnvcodec2"
+}
+
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" ffnvcodec
-    cd ffnvcodec
+    if [[ $ADDINS_STR == *4.4* || $ADDINS_STR == *5.0* || $ADDINS_STR == *5.1* ]]; then
+        cd "$FFBUILD_DLDIR"/ffnvcodec2
+    else
+        cd "$FFBUILD_DLDIR"/ffnvcodec
+    fi
 
     make PREFIX="$FFBUILD_PREFIX" install
 }

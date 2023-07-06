@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://code.videolan.org/rist/librist.git"
-SCRIPT_COMMIT="809390b3b75a259a704079d0fb4d8f1b5f7fa956"
+SCRIPT_COMMIT="c917e970be95658411e249f6e4e7fc1eeea6fe99"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" librist
-    cd librist
+    cd "$FFBUILD_DLDIR/$SELF"
 
     mkdir build && cd build
 

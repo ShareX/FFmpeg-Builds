@@ -22,11 +22,27 @@ on:
 
 env:
   DOCKER_BUILDKIT: 1
+  HAVE_CLEANUP_PAT: ${{ secrets.CLEANUP_PAT != '' }}
 
 jobs:
+  pre_check:
+    name: Pre Checks
+    if: ${{ github.event.inputs.buildOnly != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo Check
+        run: |
+          if [[ "$GITHUB_REPOSITORY" != "BtbN/FFmpeg-Builds" ]]; then
+            echo "When forking this repository to make your own builds, you have to adjust this check."
+            echo "When doing so make sure to randomize the scheduled cron time above, in order to spread out the various build times as much as possible."
+            echo "This has been put in place due to the enormous amounts of traffic hundreds/thousands of parallel builds can cause on external infrastructure."
+            exit 1
+          fi
+          exit 0
   build_base:
     name: Build base image
     if: ${{ github.event.inputs.buildOnly != 'true' }}
+    needs: pre_check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,7 +59,13 @@ jobs:
           password: ${{ github.token }}
       - name: Image Name
         id: imagename
-        run: echo "::set-output name=name::ghcr.io/${GITHUB_REPOSITORY,,}/base"
+        run: |
+          IMG="${GITHUB_REPOSITORY,,}/base"
+          DLIMG="${GITHUB_REPOSITORY,,}/dl_cache"
+          echo "name=ghcr.io/${IMG/ /-}" >> $GITHUB_OUTPUT
+          echo "rawname=${IMG/ /-}" >> $GITHUB_OUTPUT
+          echo "dlname=ghcr.io/${DLIMG/ /-}" >> $GITHUB_OUTPUT
+          echo "dlrawname=${DLIMG/ /-}" >> $GITHUB_OUTPUT
       - name: Stop Commands
         run: T="$(echo -n ${{ github.token }} | sha256sum | head -c 64)" && echo -e "::add-mask::${T}\n::stop-commands::${T}"
       - name: Build target base image
@@ -55,6 +77,45 @@ jobs:
           tags: ${{ steps.imagename.outputs.name }}:latest
           cache-to: type=registry,mode=max,ref=${{ steps.imagename.outputs.name }}:cache
           cache-from: type=registry,ref=${{ steps.imagename.outputs.name }}:cache
+      - name: Generate download cache Dockerfile
+        id: dl_cache
+        run: |
+          ./generate.sh dl only
+          echo "dltagname=$(./util/get_dl_cache_tag.sh)" >> $GITHUB_OUTPUT
+          cat Dockerfile.dl
+      - name: Build download cache image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: Dockerfile.dl
+          pull: true
+          push: true
+          tags: ${{ steps.imagename.outputs.dlname }}:${{ steps.dl_cache.outputs.dltagname }}
+          cache-to: type=registry,mode=max,ref=${{ steps.imagename.outputs.dlname }}:cache
+          cache-from: type=registry,ref=${{ steps.imagename.outputs.dlname }}:cache
+      - name: Cleanup
+        if: ${{ env.HAVE_CLEANUP_PAT == 'true' }}
+        continue-on-error: true
+        uses: BtbN/delete-untagged-ghcr-action@main
+        with:
+          token: ${{ secrets.CLEANUP_PAT }}
+          package_name: ${{ steps.imagename.outputs.rawname }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          owner_type: user
+          untagged_only: true
+      - name: Cleanup Download Cache
+        if: ${{ env.HAVE_CLEANUP_PAT == 'true' }}
+        continue-on-error: true
+        uses: BtbN/delete-untagged-ghcr-action@main
+        with:
+          token: ${{ secrets.CLEANUP_PAT }}
+          package_name: ${{ steps.imagename.outputs.dlrawname }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          owner_type: user
+          untagged_only: false
+          keep_latest: 20
   build_target_bases:
     name: Build target base image
     if: ${{ github.event.inputs.buildOnly != 'true' }}
@@ -79,7 +140,11 @@ jobs:
           password: ${{ github.token }}
       - name: Image Name
         id: imagename
-        run: echo "::set-output name=name::ghcr.io/${GITHUB_REPOSITORY,,}/base-${{ matrix.target }}"
+        run: |
+          IMG="${GITHUB_REPOSITORY,,}/base-${{ matrix.target }}"
+          echo "name=ghcr.io/${IMG/ /-}" >> $GITHUB_OUTPUT
+          echo "rawname=${IMG/ /-}" >> $GITHUB_OUTPUT
+          echo "gh_repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
       - name: Stop Commands
         run: T="$(echo -n ${{ github.token }} | sha256sum | head -c 64)" && echo -e "::add-mask::${T}\n::stop-commands::${T}"
       - name: Build target base image
@@ -91,6 +156,19 @@ jobs:
           tags: ${{ steps.imagename.outputs.name }}:latest
           cache-to: type=registry,mode=max,ref=${{ steps.imagename.outputs.name }}:cache
           cache-from: type=registry,ref=${{ steps.imagename.outputs.name }}:cache
+          build-args: |
+            GH_REPO=ghcr.io/${{ steps.imagename.outputs.gh_repo }}
+      - name: Cleanup
+        if: ${{ env.HAVE_CLEANUP_PAT == 'true' }}
+        continue-on-error: true
+        uses: BtbN/delete-untagged-ghcr-action@main
+        with:
+          token: ${{ secrets.CLEANUP_PAT }}
+          package_name: ${{ steps.imagename.outputs.rawname }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          owner_type: user
+          untagged_only: true
   build_targets:
     name: Build target-variant image
     if: ${{ github.event.inputs.buildOnly != 'true' }}
@@ -100,7 +178,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [win64,win32]
-        variant: [gpl,gpl 5.1]
+        variant: [gpl,gpl 6.0]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -119,9 +197,9 @@ jobs:
       - name: Image Name
         id: imagename
         run: |
-          IMG="ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.target }}-${{ matrix.variant }}"
-          echo "::set-output name=name::${IMG/ /-}"
-          echo "::set-output name=gh_repo::${GITHUB_REPOSITORY,,}"
+          IMG="${GITHUB_REPOSITORY,,}/${{ matrix.target }}-${{ matrix.variant }}"
+          echo "name=ghcr.io/${IMG/ /-}" >> $GITHUB_OUTPUT
+          echo "rawname=${IMG/ /-}" >> $GITHUB_OUTPUT
       - name: Stop Commands
         run: T="$(echo -n ${{ github.token }} | sha256sum | head -c 64)" && echo -e "::add-mask::${T}\n::stop-commands::${T}"
       - name: Build target base image
@@ -133,8 +211,17 @@ jobs:
           tags: ${{ steps.imagename.outputs.name }}:latest
           cache-to: type=registry,mode=max,ref=${{ steps.imagename.outputs.name }}:cache
           cache-from: type=registry,ref=${{ steps.imagename.outputs.name }}:cache
-          build-args: |
-            GH_REPO=ghcr.io/${{ steps.imagename.outputs.gh_repo }}
+      - name: Cleanup
+        if: ${{ env.HAVE_CLEANUP_PAT == 'true' }}
+        continue-on-error: true
+        uses: BtbN/delete-untagged-ghcr-action@main
+        with:
+          token: ${{ secrets.CLEANUP_PAT }}
+          package_name: ${{ steps.imagename.outputs.rawname }}
+          repository_owner: ${{ github.repository_owner }}
+          repository: ${{ github.repository }}
+          owner_type: user
+          untagged_only: true
   build_ffmpeg:
     name: Build ffmpeg
     if: ${{ ( github.event.inputs.buildOnly == 'true' && !cancelled() ) || success() }}
@@ -144,7 +231,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [win64,win32]
-        variant: [gpl,gpl 5.1]
+        variant: [gpl,gpl 6.0]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -185,8 +272,8 @@ jobs:
           NAME="Auto-Build $RELDATE"
           TAGNAME="autobuild-$(date +'%Y-%m-%d-%H-%M')"
           hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" -m "$TAGNAME" -t "master" "$TAGNAME"
-          echo "::set-output name=tag_name::${TAGNAME}"
-          echo "::set-output name=rel_date::${RELDATE}"
+          echo "tag_name=${TAGNAME}" >> $GITHUB_OUTPUT
+          echo "rel_date=${RELDATE}" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Update Latest
@@ -197,7 +284,7 @@ jobs:
           TAGNAME="latest"
           hub release delete "$TAGNAME" || true
           git push --delete origin "$TAGNAME" || true
-          sleep 30
+          sleep 15
           hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" -m "$TAGNAME" -t "master" "$TAGNAME"
         env:
           GITHUB_TOKEN: ${{ github.token }}

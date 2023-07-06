@@ -11,10 +11,13 @@ ffbuild_enabled() {
     return 0
 }
 
+ffbuild_dockerdl() {
+    to_df "RUN git clone \"$SCRIPT_REPO\" \"$SELF\""
+    to_df "RUN git -C \"$SELF\" checkout \"$SCRIPT_COMMIT\""
+}
+
 ffbuild_dockerbuild() {
-    git clone "$SCRIPT_REPO" xavs2
-    cd xavs2
-    git checkout "$SCRIPT_COMMIT"
+    cd "$FFBUILD_DLDIR/$SELF"
     cd build/linux
 
     local myconf=(
@@ -40,6 +43,10 @@ ffbuild_dockerbuild() {
         echo "Unknown target"
         return -1
     fi
+
+    # Work around configure endian check failing on modern gcc/binutils.
+    # Assumes all supported archs are little endian.
+    sed -i -e 's/EGIB/bss/g' -e 's/naidnePF/bss/g' configure
 
     ./configure "${myconf[@]}"
     make -j$(nproc)

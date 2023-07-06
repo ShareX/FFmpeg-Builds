@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/oneapi-src/oneVPL.git"
-SCRIPT_COMMIT="250d806b58678bdce13820a2dcbc8fd73987724c"
+SCRIPT_COMMIT="e12ace9761bb52786409e830f619916b86e87fc5"
 
 ffbuild_enabled() {
     [[ $TARGET == *arm64 ]] && return -1
@@ -12,8 +12,7 @@ ffbuild_enabled() {
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" onevpl
-    cd onevpl
+    cd "$FFBUILD_DLDIR/$SELF"
 
     mkdir build && cd build
 
@@ -27,12 +26,10 @@ ffbuild_dockerbuild() {
     ninja install
 
     rm -rf "$FFBUILD_PREFIX"/{etc,share}
-
-    cat /opt/ffbuild/lib/pkgconfig/vpl.pc
 }
 
 ffbuild_configure() {
-    [[ $ADDINS_STR == *onevpl* ]] && echo --enable-libvpl
+    echo --enable-libvpl
 }
 
 ffbuild_unconfigure() {

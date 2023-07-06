@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://gitlab.freedesktop.org/xorg/lib/libxau.git"
-SCRIPT_COMMIT="4fbefa02d6c842401ff79065d364edd7087a12a6"
+SCRIPT_COMMIT="df1bf4fe528a5a9eef420f78efb225e4696ac467"
 
 ffbuild_enabled() {
     [[ $TARGET != linux* ]] && return -1
@@ -9,8 +9,7 @@ ffbuild_enabled() {
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" libxau
-    cd libxau
+    cd "$FFBUILD_DLDIR/$SELF"
 
     autoreconf -i
 

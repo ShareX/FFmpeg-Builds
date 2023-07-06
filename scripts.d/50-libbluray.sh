@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://code.videolan.org/videolan/libbluray.git"
-SCRIPT_COMMIT="5539addbbf8c26d756fc2cb76b3919f8b73be66a"
+SCRIPT_COMMIT="bb5bc108ec695889855f06df338958004ff289ef"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" libbluray
-    cd libbluray
+    cd "$FFBUILD_DLDIR/$SELF"
 
     ./bootstrap
 

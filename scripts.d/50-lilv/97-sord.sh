@@ -1,15 +1,14 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/drobilla/sord.git"
-SCRIPT_COMMIT="d877d78c98d90fbf57136bb73919524e618fd859"
+SCRIPT_COMMIT="46f4bcbe04330645a11d00e56a7754cc1386bc45"
 
 ffbuild_enabled() {
     return 0
 }
 
 ffbuild_dockerbuild() {
-    git-mini-clone "$SCRIPT_REPO" "$SCRIPT_COMMIT" sord
-    cd sord
+    cd "$FFBUILD_DLDIR/$SELF"
 
     mkdir build && cd build
 
