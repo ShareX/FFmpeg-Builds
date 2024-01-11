@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/google/shaderc.git"
-SCRIPT_COMMIT="37e25539ce199ecaf19fb7f7d27818716d36686d"
+SCRIPT_COMMIT="aaa44b544909600381e1a180074ed7f544e48410"
 
 ffbuild_enabled() {
     [[ $ADDINS_STR == *4.4* ]] && return -1
@@ -9,13 +9,11 @@ ffbuild_enabled() {
 }
 
 ffbuild_dockerdl() {
-    default_dl "$SELF"
-    to_df "RUN cd \"$SELF\" && ./utils/git-sync-deps"
+    default_dl .
+    echo "./utils/git-sync-deps"
 }
 
 ffbuild_dockerbuild() {
-    cd "$FFBUILD_DLDIR/$SELF"
-
     mkdir build && cd build
 
     cmake -GNinja -DCMAKE_TOOLCHAIN_FILE="$FFBUILD_CMAKE_TOOLCHAIN" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$FFBUILD_PREFIX" \

@@ -1,10 +1,7 @@
-FROM ubuntu:23.04
-
-ENV FFBUILD_DLDIR="/opt/ffdl"
+FROM ubuntu:23.10
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN \
-    mkdir -p "$FFBUILD_DLDIR" && \
     apt-get -y update && \
     apt-get -y dist-upgrade && \
     apt-get -y install build-essential yasm nasm \

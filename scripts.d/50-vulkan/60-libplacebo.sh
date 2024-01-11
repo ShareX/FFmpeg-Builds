@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://code.videolan.org/videolan/libplacebo.git"
-SCRIPT_COMMIT="795600a44b03fcd52c055981a403ad60ee5d027a"
+SCRIPT_COMMIT="52314e0e435fbcb731e326815d4091ed0ba27475"
 
 ffbuild_enabled() {
     [[ $ADDINS_STR == *4.4* ]] && return -1
@@ -12,13 +12,11 @@ ffbuild_enabled() {
 }
 
 ffbuild_dockerdl() {
-    default_dl "$SELF"
-    to_df "RUN git -C \"$SELF\" submodule update --init --recursive"
+    default_dl .
+    echo "git submodule update --init --recursive"
 }
 
 ffbuild_dockerbuild() {
-    cd "$FFBUILD_DLDIR/$SELF"
-
     sed -i 's/DPL_EXPORT/DPL_STATIC/' src/meson.build
 
     mkdir build && cd build

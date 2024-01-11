@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://git.code.sf.net/p/mingw-w64/mingw-w64.git"
-SCRIPT_COMMIT="7ea930ba381ace6f19f7cfa59596f6fe49949aa6"
+SCRIPT_COMMIT="f2653dd9150006ded8026631bb7b85695edf6127"
 
 ffbuild_enabled() {
     [[ $TARGET == win* ]] || return -1
@@ -18,12 +18,10 @@ ffbuild_dockerfinal() {
 }
 
 ffbuild_dockerdl() {
-    to_df "RUN retry-tool sh -c \"rm -rf mingw && git clone '$SCRIPT_REPO' mingw\" && cd mingw && git checkout \"$SCRIPT_COMMIT\""
+    echo "retry-tool sh -c \"rm -rf mingw && git clone '$SCRIPT_REPO' mingw\" && cd mingw && git checkout \"$SCRIPT_COMMIT\""
 }
 
 ffbuild_dockerbuild() {
-    cd "$FFBUILD_DLDIR/mingw"
-
     cd mingw-w64-headers
 
     unset CFLAGS
