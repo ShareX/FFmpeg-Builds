@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/ultravideo/kvazaar.git"
-SCRIPT_COMMIT="f4294e000b72f483b32ab5cd4a4f5d5541466811"
+SCRIPT_COMMIT="d8c96881a92258dad799db8ce5a60138f16b4898"
 
 ffbuild_enabled() {
     return 0
@@ -31,6 +31,7 @@ ffbuild_dockerbuild() {
     make install
 
     echo "Cflags.private: -DKVZ_STATIC_LIB" >> "$FFBUILD_PREFIX"/lib/pkgconfig/kvazaar.pc
+    echo "Libs.private: -lpthread" >> "$FFBUILD_PREFIX"/lib/pkgconfig/kvazaar.pc
 }
 
 ffbuild_configure() {

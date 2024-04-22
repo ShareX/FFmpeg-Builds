@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_REPO="https://github.com/libjxl/libjxl.git"
-SCRIPT_COMMIT="dff3f4609559512b9c1caa8c4036267ac9e0078d"
+SCRIPT_COMMIT="5e689eb20b9967d589035f7bffd516490670fb5f"
 
 ffbuild_enabled() {
     [[ $ADDINS_STR == *4.4* ]] && return -1
@@ -22,7 +22,7 @@ ffbuild_dockerbuild() {
     if [[ $TARGET == linux* ]]; then
         # our glibc is too old(<2.25), and their detection fails for some reason
         export CXXFLAGS="$CXXFLAGS -DVQSORT_GETRANDOM=0 -DVQSORT_SECURE_SEED=0"
-    elif [[ $TARGET == win* ]]; then
+    elif [[ $TARGET == win32 || $TARGET == win64 ]]; then
         # Fix AVX2 related crash due to unaligned stack memory
         export CXXFLAGS="$CXXFLAGS -Wa,-muse-unaligned-vector-move"
         export CFLAGS="$CFLAGS -Wa,-muse-unaligned-vector-move"
@@ -36,15 +36,12 @@ ffbuild_dockerbuild() {
     ninja -j$(nproc)
     ninja install
 
-    echo "Cflags.private: -DJXL_STATIC_DEFINE=1" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl.pc
-    echo "Libs.private: -lstdc++" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl.pc
-
-    echo "Cflags.private: -DJXL_STATIC_DEFINE=1" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_threads.pc
-    echo "Libs.private: -lstdc++" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_threads.pc
-
     if [[ $TARGET == win* ]]; then
-        echo "Libs.private: -ladvapi32" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl.pc
-        echo "Libs.private: -ladvapi32" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_threads.pc
+        echo "Libs.private: -lstdc++ -ladvapi32" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl.pc
+        echo "Libs.private: -lstdc++ -ladvapi32" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_threads.pc
+    else
+        echo "Libs.private: -lstdc++" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl.pc
+        echo "Libs.private: -lstdc++" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_threads.pc
     fi
 
     echo "Requires.private: lcms2" >> "${FFBUILD_PREFIX}"/lib/pkgconfig/libjxl_cms.pc
